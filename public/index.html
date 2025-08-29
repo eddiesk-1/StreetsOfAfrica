@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streets of Africa</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f0f0f0; color: #333; }
+    .header { background: #333; color: white; padding: 10px; text-align: center; position: relative; }
+    .header .icons { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
+    .search-bar { padding: 10px; display: flex; justify-content: center; }
+    .search-bar input { padding: 5px; margin-right: 5px; }
+    .search-bar button { padding: 5px 10px; }
+    #serviceList { display: flex; flex-wrap: wrap; padding: 20px; }
+    .service { margin: 10px; padding: 10px; background: white; border: 1px solid #ddd; border-radius: 5px; position: relative; }
+    .service .rating { font-size: 0.8em; color: #666; }
+    .service .remove { position: absolute; top: 5px; right: 5px; cursor: pointer; }
+    .post-form, .messages, .profile-edit { 
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+      background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 300px;
+    }
+    .post-form.active, .messages.active, .profile-edit.active { display: block; }
+    .post-form input, .post-form textarea, .post-form select, .post-form button,
+    .messages input, .messages button, .profile-edit input, .profile-edit button { 
+      width: 100%; margin: 5px 0; padding: 5px; 
+    }
+    .messages #messageList { max-height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Streets of Africa</h2>
+    <div class="icons">
+      <i class="fas fa-plus" onclick="togglePostForm()"></i>
+      <i class="fas fa-user" onclick="toggleProfile()"></i>
+      <i class="fas fa-envelope" onclick="toggleMessages()"></i>
+    </div>
+  </div>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search...">
+    <button onclick="searchServices()"><i class="fas fa-search"></i></button>
+  </div>
+  <div id="serviceList"></div>
+  <div id="postForm" class="post-form">
+    <input type="text" id="postUsername" placeholder="Username (Name@0XXXXXXXXX)" value="user@0123456789">
+    <input type="text" id="postTitle" placeholder="Title" required>
+    <textarea id="postDescription" placeholder="Description (optional)"></textarea>
+    <select id="postCategory" required>
+      <option value="">Select Category</option>
+      <option value="Food">Food</option>
+      <option value="Crafts">Crafts</option>
+      <option value="Services">Services</option>
+      <option value="Fashion">Fashion</option>
+      <option value="Technology">Technology</option>
+      <option value="Education">Education</option>
+      <option value="Health">Health</option>
+      <option value="Agriculture">Agriculture</option>
+    </select>
+    <input type="number" id="postPrice" placeholder="Price (optional)">
+    <input type="file" id="postPhoto" accept="image/*">
+    <input type="file" id="postMusic" accept="audio/*">
+    <input type="file" id="postDocument" accept="application/pdf,application/msword">
+    <button onclick="submitPost()">Post</button>
+    <button onclick="togglePostForm()">Close</button>
+  </div>
+  <div id="messages" class="messages">
+    <input type="text" id="msgTo" placeholder="To (Name@0XXXXXXXXX)">
+    <input type="text" id="msgContent" placeholder="Message">
+    <button onclick="sendMessage()">Send</button>
+    <div id="messageList"></div>
+  </div>
+  <div id="profileEdit" class="profile-edit">
+    <input type="text" id="editUsername" placeholder="Username (Name@0XXXXXXXXX)">
+    <button onclick="saveProfile()">Save</button>
+    <div id="postedServices"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io.connect('http://localhost:3002');
+    const serviceList = document.getElementById('serviceList');
+    const postForm = document.getElementById('postForm');
+    const messagesDiv = document.getElementById('messages');
+    const profileEdit = document.getElementById('profileEdit');
+    let currentUser = 'user@0123456789';
+    let services = [];
+
+    function togglePostForm() { postForm.classList.toggle('active'); }
+    function toggleMessages() { messagesDiv.classList.toggle('active'); }
+    function toggleProfile() { 
+      profileEdit.classList.toggle('active');
+      document.getElementById('editUsername').value = currentUser;
+      document.getElementById('postedServices').innerHTML = services
+        .filter(s => s.username === currentUser)
+        .map(s => `<div>${s.title} <span onclick="removeService(${s.id})" class="remove">X</span></div>`).join('');
+    }
+
+    function submitPost() {
+      const username = document.getElementById('postUsername').value;
+      const title = document.getElementById('postTitle').value;
+      const description = document.getElementById('postDescription').value;
+      const category = document.getElementById('postCategory').value;
+      const price = document.getElementById('postPrice').value;
+      const photo = document.getElementById('postPhoto').files[0];
+      const music = document.getElementById('postMusic').files[0];
+      const documentFile = document.getElementById('postDocument').files[0];
+
+      if (!/^[a-zA-Z0-9_]+@[0-9]{10}$/.test(username) || !title || !category) {
+        alert('Invalid input');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('title', title);
+      formData.append('category', category);
+      formData.append('description', description);
+      formData.append('price', price || '');
+      if (photo) formData.append('photo', photo);
+      if (music) formData.append('music', music);
+      if (documentFile) formData.append('document', documentFile);
+
+      fetch('/service', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          console.log('Service added:', data);
+          togglePostForm();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function searchServices() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const services = document.querySelectorAll('.service');
+      services.forEach(service => {
+        const title = service.querySelector('h3').textContent.toLowerCase();
+        if (title.includes(query)) service.style.display = 'block';
+        else service.style.display = 'none';
+      });
+    }
+
+    function removeService(id) {
+      fetch(`/service/${id}?username=${prompt('Confirm username:')}`, { method: 'DELETE' })
+        .then(res => {
+          if (res.ok) location.reload();
+          else throw new Error('Removal failed');
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function sendMessage() {
+      const to = document.getElementById('msgTo').value;
+      const content = document.getElementById('msgContent').value;
+      if (content && /@[0-9]{10}$/.test(to)) {
+        fetch('/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: currentUser, to, content })
+        })
+          .then(res => res.json())
+          .then(data => {
+            console.log('Sent:', data);
+            document.getElementById('msgContent').value = '';
+          })
+          .catch(error => console.error('Error:', error));
+      }
+    }
+
+    socket.on('serviceAdded', (service) => {
+      services.push(service);
+      const div = document.createElement('div');
+      div.className = 'service';
+      div.innerHTML = `<h3>${service.title}</h3><p>${service.description || ''}</p><p>Price: ${service.price || 'N/A'}</p>`;
+      if (service.photo) div.innerHTML += `<img src="${service.photo}" style="max-width: 100%;">`;
+      div.innerHTML += `<div class="rating">Rating: ${service.ratings.reduce((a, b) => a + b, 0) / Math.max(service.ratings.length, 1) || 0}/5</div>`;
+      if (service.username === currentUser) div.innerHTML += `<span class="remove" onclick="removeService(${service.id})">X</span>`;
+      serviceList.appendChild(div);
+    });
+
+    socket.on('serviceUpdated', (service) => {
+      services = services.map(s => s.id === service.id ? service : s);
+      const div = serviceList.querySelector(`.service[data-id="${service.id}"]`);
+      if (div) {
+        div.innerHTML = `<h3>${service.title}</h3><p>${service.description || ''}</p><p>Price: ${service.price || 'N/A'}</p>`;
+        if (service.photo) div.innerHTML += `<img src="${service.photo}" style="max-width: 100%;">`;
+        div.innerHTML += `<div class="rating">Rating: ${service.ratings.reduce((a, b) => a + b, 0) / Math.max(service.ratings.length, 1) || 0}/5</div>`;
+        if (service.username === currentUser) div.innerHTML += `<span class="remove" onclick="removeService(${service.id})">X</span>`;
+      }
+    });
+
+    socket.on('serviceRemoved', (id) => {
+      services = services.filter(s => s.id !== id);
+      const div = serviceList.querySelector(`.service[data-id="${id}"]`);
+      if (div) div.remove();
+    });
+
+    socket.on('newMessage', (message) => {
+      if (message.to === currentUser) {
+        const div = document.createElement('div');
+        div.textContent = `${message.from}: ${message.content} (${new Date(message.timestamp).toLocaleTimeString()})`;
+        document.getElementById('messageList').appendChild(div);
+      }
+    });
+
+    function saveProfile() {
+      const newUsername = document.getElementById('editUsername').value;
+      if (/^[a-zA-Z0-9_]+@[0-9]{10}$/.test(newUsername)) {
+        currentUser = newUsername;
+        alert('Profile updated!');
+        toggleProfile();
+      } else {
+        alert('Invalid username format');
+      }
+    }
+  </script>
+</body>
+</html>
+ 
