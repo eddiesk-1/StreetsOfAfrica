@@ -19,11 +19,11 @@
       z-index: 10; 
       height: 50px; 
     }
-    #logo { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; } /* Smaller logo */
+    #logo { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
     .title { font-size: 18px; font-weight: bold; }
     .icons { 
       position: relative; 
-      transform: translateX(-10px); /* Move icons left */
+      transform: translateX(-10px); 
       display: flex; 
       gap: 10px; 
     }
@@ -47,7 +47,7 @@
       padding: 10px; 
       display: flex; 
       z-index: 10; 
-      transform: translateX(-10px); /* Move search left */
+      transform: translateX(-10px); 
     }
     #search-input { 
       flex: 1; 
@@ -62,10 +62,10 @@
     #search-btn { display: none; }
     #service-container { 
       position: relative; 
-      min-height: 100vh; /* Allow scrolling */
-      overflow-y: auto; /* Enable vertical scrolling */
-      padding-top: 60px; /* Space for header */
-      padding-bottom: 60px; /* Space for search bar */
+      min-height: 100vh; 
+      overflow-y: auto; 
+      padding-top: 60px; 
+      padding-bottom: 60px; 
     }
     .service-circle { 
       position: absolute; 
@@ -81,9 +81,9 @@
       color: black; 
     }
     .service-circle.expanded { 
-      width: 95% !important; 
+      width: 90% !important; /* Slightly smaller */
       height: auto !important; 
-      left: 2% !important; /* Slightly left */
+      left: 1% !important; /* Slightly left */
       top: 20% !important; 
       z-index: 20; 
       background: white !important; 
@@ -92,7 +92,22 @@
       padding: 20px; 
       position: fixed; 
     }
-    .service-circle.expanded img { max-width: 100%; }
+    .service-circle.expanded img, .service-circle.expanded video { 
+      max-width: 100%; 
+      max-height: 200px; 
+    }
+    .file-preview { 
+      width: 50px; 
+      height: 50px; 
+      object-fit: cover; 
+      margin-top: 10px; 
+    } /* Logo-sized preview */
+    .file-download { 
+      margin-top: 10px; 
+      color: blue; 
+      text-decoration: underline; 
+      cursor: pointer; 
+    }
     .remove-btn { 
       display: none; 
       position: absolute; 
@@ -192,7 +207,7 @@
       <option value="Agriculture">Agriculture</option>
     </select>
     <input type="text" id="post-price" placeholder="Price (e.g., 100 or 100 USD)">
-    <input type="file" id="post-file" accept="image/*,audio/*,.pdf,.doc,.docx">
+    <input type="file" id="post-file" accept="image/*,video/*,.pdf,.doc,.docx">
     <button onclick="postService()">Post</button>
   </div>
 
@@ -230,7 +245,7 @@
 
     let services = [];
     let positions = [];
-    const cycleHeight = window.innerHeight - 150; // Space for header and search bar
+    const cycleHeight = window.innerHeight - 150;
 
     const categoryColors = {
       Food: 'green', Crafts: 'blue', Services: 'orange', Fashion: 'purple',
@@ -432,8 +447,8 @@
           ${isOwner ? `<span class="remove-btn" style="display:block;" onclick="event.stopPropagation(); removeService('${s.id}')">X</span>` : ''}
         `;
         circle.onclick = (e) => {
-          if (e.target.className === 'remove-btn' || e.target.className === 'close-btn-expanded') return; // Only close via X
-          if (circle.classList.contains('expanded')) return; // Prevent re-expanding
+          if (e.target.className === 'remove-btn' || e.target.className === 'close-btn-expanded' || e.target.id === 'msg-to-provider') return;
+          if (circle.classList.contains('expanded')) return;
           document.querySelectorAll('.service-circle.expanded').forEach(c => {
             if (c !== circle) c.querySelector('.close-btn-expanded')?.click();
           });
@@ -443,9 +458,16 @@
             <h3>${s.title}</h3>
             <p>${s.description || ''}</p>
             <p>Price: ${s.price || 'N/A'}</p>
-            ${s.file ? `<img src="${s.file}" alt="File">` : ''}
-            ${s.file && s.file.match(/\.(mp3|wav)$/i) ? `<audio controls src="${s.file}"></audio>` : ''}
-            ${s.file && s.file.match(/\.(pdf|doc|docx)$/i) ? `<a href="${s.file}" target="_blank">Document</a>` : ''}
+            ${s.file && s.file.match(/\.(jpe?g|png)$/i) ? `<img src="${s.file}" alt="File">` : ''}
+            ${s.file && s.file.match(/\.(mp4|webm|ogg)$/i) ? `<video controls src="${s.file}"></video>` : ''}
+            ${s.file && s.file.match(/\.(pdf|doc|docx)$/i) ? `<a href="${s.file}" target="_blank">View Document</a>` : ''}
+            ${s.file ? `
+              <p>Preview:</p>
+              ${s.file.match(/\.(jpe?g|png)$/i) ? `<img class="file-preview" src="${s.file}" alt="Preview">` : ''}
+              ${s.file.match(/\.(mp4|webm|ogg)$/i) ? `<video class="file-preview" src="${s.file}"></video>` : ''}
+              ${s.file.match(/\.(pdf|doc|docx)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Doc" alt="Document Preview">` : ''}
+              <a class="file-download" href="${s.file}" download>Download File</a>
+            ` : ''}
             <p>Rating: ${avgRating.toFixed(1)}/5</p>
             <select id="rate-${s.id}">
               <option value="0">Rate</option>
@@ -511,8 +533,8 @@
       const circles = document.querySelectorAll('.service-circle:not(.expanded)');
       circles.forEach((c, i) => {
         let y = positions[i].y;
-        y -= 0.05; // Very slow upward movement
-        if (y < -c.offsetHeight) { // Move past top before reappearing
+        y -= 0.05;
+        if (y < -c.offsetHeight) {
           y = 100 + cycleHeight;
           positions[i].startY = y;
         }
