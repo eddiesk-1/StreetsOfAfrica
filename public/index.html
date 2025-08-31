@@ -8,33 +8,157 @@
   <style>
     body { margin: 0; font-family: Arial, sans-serif; color: white; background: black; }
     #background { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-repeat: no-repeat; background-attachment: fixed; z-index: -1; display: none; }
-    header { background: rgba(0,0,0,0.7); display: flex; justify-content: space-between; align-items: center; padding: 10px; position: fixed; width: 100%; z-index: 10; }
-    #logo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
-    .icons i { font-size: 24px; margin-left: 20px; cursor: pointer; }
-    #search-bar { position: fixed; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); padding: 10px; display: flex; z-index: 10; }
-    #search-input { flex: 1; padding: 10px; background: white; color: black; border: none; }
-    #search-btn { background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; }
+    header { 
+      background: rgba(0,0,0,0.7); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 5px 10px; 
+      position: fixed; 
+      width: 100%; 
+      z-index: 10; 
+      height: 50px; 
+    }
+    #logo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+    .title { font-size: 18px; font-weight: bold; }
+    .icons { position: relative; }
+    .icons i { font-size: 20px; margin-left: 15px; cursor: pointer; }
+    .notification { 
+      position: absolute; 
+      top: -5px; 
+      right: -5px; 
+      background: red; 
+      color: white; 
+      border-radius: 50%; 
+      padding: 2px 6px; 
+      font-size: 12px; 
+      display: none; 
+    }
+    #search-bar { 
+      position: fixed; 
+      bottom: 0; 
+      width: 100%; 
+      background: rgba(0,0,0,0.7); 
+      padding: 10px; 
+      display: flex; 
+      z-index: 10; 
+    }
+    #search-input { 
+      flex: 1; 
+      padding: 12px 12px 12px 40px; /* Space for icon */
+      background: white url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/../webfonts/fa-solid-900.woff2') no-repeat 10px center; /* Search icon */
+      background-size: 20px; /* Icon size */
+      color: black; 
+      border: none; 
+      font-size: 18px; 
+      border-radius: 25px; /* Rounded input */
+    }
+    #search-btn { 
+      display: none; /* Hide separate button */
+    }
     #service-container { position: relative; height: 100vh; overflow: hidden; }
-    .service-circle { position: absolute; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; cursor: pointer; transition: transform 0.2s; color: black; }
-    .service-circle.expanded { width: 80% !important; height: auto !important; left: 10% !important; top: 20% !important; z-index: 20; background: white !important; color: black; border-radius: 10px; padding: 20px; }
+    .service-circle { 
+      position: absolute; 
+      border-radius: 50%; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
+      align-items: center; 
+      text-align: center; 
+      padding: 10px; 
+      cursor: pointer; 
+      transition: all 0.2s; /* Smooth size transition */
+      color: black; 
+    }
+    .service-circle.expanded { 
+      width: 95% !important; /* Almost full viewport width */
+      height: auto !important; 
+      left: 2.5% !important; 
+      top: 20% !important; 
+      z-index: 20; 
+      background: white !important; 
+      color: black; 
+      border-radius: 10px; 
+      padding: 20px; 
+      position: fixed; 
+    }
     .service-circle.expanded img { max-width: 100%; }
-    .remove-btn { display: none; position: absolute; top: 5px; right: 5px; color: red; cursor: pointer; }
-    .popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); padding: 20px; z-index: 20; width: 80%; max-width: 400px; color: white; }
-    .popup input, .popup textarea, .popup select { width: 100%; margin-bottom: 10px; padding: 10px; background: white; color: black; border: none; }
-    .popup button { padding: 10px; background: green; color: white; border: none; cursor: pointer; }
-    .close-btn { position: absolute; top: 10px; right: 10px; cursor: pointer; color: red; }
-    #message-list { height: 200px; overflow-y: scroll; background: white; color: black; padding: 10px; margin-bottom: 10px; }
-    #settings-toggle { margin-left: 10px; color: white; cursor: pointer; }
+    .remove-btn { 
+      display: none; 
+      position: absolute; 
+      top: 5px; 
+      right: 5px; 
+      color: red; 
+      cursor: pointer; 
+    }
+    .close-btn-expanded { 
+      position: absolute; 
+      top: 5px; 
+      right: 5px; 
+      color: red; 
+      cursor: pointer; 
+      font-size: 18px; 
+    }
+    .popup { 
+      display: none; 
+      position: fixed; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+      background: rgba(0,0,0,0.7); 
+      padding: 20px; 
+      z-index: 20; 
+      width: 80%; 
+      max-width: 400px; 
+      color: white; 
+    }
+    .popup input, .popup textarea, .popup select { 
+      width: 100%; 
+      margin-bottom: 10px; 
+      padding: 10px; 
+      background: white; 
+      color: black; 
+      border: none; 
+    }
+    .popup select { font-size: 16px; } /* Ensure emojis display */
+    .popup button { 
+      padding: 10px; 
+      background: green; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+    }
+    .close-btn { 
+      position: absolute; 
+      top: 10px; 
+      right: 10px; 
+      cursor: pointer; 
+      color: red; 
+    }
+    #message-list { 
+      height: 200px; 
+      overflow-y: scroll; 
+      background: white; 
+      color: black; 
+      padding: 10px; 
+      margin-bottom: 10px; 
+    }
+    #settings-toggle { 
+      margin-left: 10px; 
+      color: white; 
+      cursor: pointer; 
+    }
   </style>
 </head>
 <body>
   <div id="background"></div>
   <header>
-    <img id="logo" src="/logo.jpg" alt="Logo" onerror="this.src='https://via.placeholder.com/80?text=Logo';">
+    <img id="logo" src="/logo.jpg" alt="Logo" onerror="this.src='https://via.placeholder.com/60?text=Logo';">
+    <span class="title">Streets of Africa</span>
     <div class="icons">
       <i class="fas fa-plus" id="post-icon"></i>
       <i class="fas fa-user" id="profile-icon"></i>
-      <i class="fas fa-envelope" id="msg-icon"></i>
+      <i class="fas fa-envelope" id="msg-icon"><span id="msg-notification" class="notification">0</span></i>
       <i class="fas fa-cog" id="settings-toggle" title="Toggle Background"></i>
     </div>
   </header>
@@ -61,10 +185,8 @@
       <option value="Health">Health</option>
       <option value="Agriculture">Agriculture</option>
     </select>
-    <input type="number" id="post-price" placeholder="Price (optional)">
-    <input type="file" id="post-photo" accept="image/*">
-    <input type="file" id="post-music" accept="audio/*">
-    <input type="file" id="post-document" accept=".pdf,.doc,.docx">
+    <input type="text" id="post-price" placeholder="Price (e.g., 100 or 100 USD)">
+    <input type="file" id="post-file" accept="image/*,audio/*,.pdf,.doc,.docx">
     <button onclick="postService()">Post</button>
   </div>
 
@@ -90,6 +212,7 @@
   <script>
     const socket = io();
     let currentUser = localStorage.getItem('username') || '';
+    let unreadMessages = 0;
     if (!currentUser || !/^[a-zA-Z0-9_]+@[0-9]{10}$/.test(currentUser)) {
       currentUser = prompt('Enter your username (e.g., user@0123456789)', 'user@0123456789');
       while (!/^[a-zA-Z0-9_]+@[0-9]{10}$/.test(currentUser)) {
@@ -100,8 +223,8 @@
     socket.emit('registerUser', currentUser);
 
     let services = [];
-    let velocities = [];
-    let animationStart = Date.now();
+    let positions = [];
+    const cycleHeight = window.innerHeight - 150;
     const categoryColors = {
       Food: 'green', Crafts: 'blue', Services: 'orange', Fashion: 'purple',
       Technology: 'red', Education: 'yellow', Health: 'pink', Agriculture: 'brown'
@@ -125,10 +248,15 @@
       renderServices();
     });
     socket.on('serviceRemoved', id => {
-      services = services.filter(s => s.id !== id);
+      services = services.filter(s => s.id === id);
       renderServices();
     });
     socket.on('newMessage', msg => {
+      if (msg.to === currentUser && document.getElementById('msg-form').style.display !== 'block') {
+        unreadMessages++;
+        document.getElementById('msg-notification').style.display = 'block';
+        document.getElementById('msg-notification').innerText = unreadMessages;
+      }
       if ((msg.to === currentUser || msg.from === currentUser) && document.getElementById('msg-form').style.display === 'block') {
         loadMessages();
       }
@@ -160,6 +288,9 @@
     };
     document.getElementById('msg-icon').onclick = () => {
       showPopup('msg-form');
+      unreadMessages = 0;
+      document.getElementById('msg-notification').style.display = 'none';
+      document.getElementById('msg-notification').innerText = '0';
       loadMessages();
     };
 
@@ -184,12 +315,8 @@
       formData.append('description', desc);
       formData.append('category', category);
       formData.append('price', price);
-      const photo = document.getElementById('post-photo').files[0];
-      if (photo) formData.append('photo', photo);
-      const music = document.getElementById('post-music').files[0];
-      if (music) formData.append('music', music);
-      const doc = document.getElementById('post-document').files[0];
-      if (doc) formData.append('document', doc);
+      const file = document.getElementById('post-file').files[0];
+      if (file) formData.append('file', file);
       fetch('/api/service', { method: 'POST', body: formData })
         .then(res => {
           if (!res.ok) throw new Error(res.statusText);
@@ -201,9 +328,7 @@
           document.getElementById('post-desc').value = '';
           document.getElementById('post-category').value = '';
           document.getElementById('post-price').value = '';
-          document.getElementById('post-photo').value = '';
-          document.getElementById('post-music').value = '';
-          document.getElementById('post-document').value = '';
+          document.getElementById('post-file').value = '';
         })
         .catch(err => alert('Error posting: ' + err.message));
     }
@@ -284,19 +409,19 @@
       const query = document.getElementById('search-input').value.toLowerCase();
       services.forEach((s, i) => {
         if (query && !s.title.toLowerCase().includes(query)) return;
-        const avgRating = s.ratings.length ? (s.ratings.reduce((a,b)=>a+b,0)/s.ratings.length).toFixed(1) : 0;
-        const size = 50 + (avgRating * 10);
+        const avgRating = s.ratings.length ? (s.ratings.reduce((a,b)=>a+b,0)/s.ratings.length) : 0;
+        const size = window.innerWidth * 0.45 + (avgRating * 20); // Almost half viewport width + rating boost
         const circle = document.createElement('div');
         circle.className = 'service-circle';
         circle.style.width = `${size}px`;
         circle.style.height = `${size}px`;
         circle.style.backgroundColor = categoryColors[s.category] || 'gray';
-        if (s.photo) circle.style.backgroundImage = `url(${s.photo})`;
+        if (s.file) circle.style.backgroundImage = `url(${s.file})`;
         circle.style.backgroundSize = 'cover';
         const isOwner = s.username === currentUser;
         circle.innerHTML = `
           <h3>${s.title}</h3>
-          <p>Rating: ${avgRating}/5</p>
+          <p>Rating: ${avgRating.toFixed(1)}/5</p>
           ${isOwner ? `<span class="remove-btn" style="display:block;" onclick="event.stopPropagation(); removeService('${s.id}')">X</span>` : ''}
         `;
         circle.onclick = (e) => {
@@ -305,23 +430,33 @@
             circle.classList.remove('expanded');
             circle.innerHTML = `
               <h3>${s.title}</h3>
-              <p>Rating: ${avgRating}/5</p>
+              <p>Rating: ${avgRating.toFixed(1)}/5</p>
               ${isOwner ? `<span class="remove-btn" style="display:block;" onclick="event.stopPropagation(); removeService('${s.id}')">X</span>` : ''}
             `;
+            circle.style.width = `${size}px`;
+            circle.style.height = `${size}px`;
           } else {
             document.querySelectorAll('.service-circle.expanded').forEach(c => {
               if (c !== circle) c.click();
             });
             circle.classList.add('expanded');
             circle.innerHTML = `
+              <span class="close-btn-expanded" onclick="event.stopPropagation(); this.parentElement.click()">X</span>
               <h3>${s.title}</h3>
               <p>${s.description || ''}</p>
               <p>Price: ${s.price || 'N/A'}</p>
-              ${s.photo ? `<img src="${s.photo}" alt="Photo">` : ''}
-              ${s.music ? `<audio controls src="${s.music}"></audio>` : ''}
-              ${s.document ? `<a href="${s.document}" target="_blank">Document</a>` : ''}
-              <p>Rating: ${avgRating}/5</p>
-              <select id="rate-${s.id}"><option>Rate</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+              ${s.file ? `<img src="${s.file}" alt="File">` : ''}
+              ${s.file && s.file.match(/\.(mp3|wav)$/i) ? `<audio controls src="${s.file}"></audio>` : ''}
+              ${s.file && s.file.match(/\.(pdf|doc|docx)$/i) ? `<a href="${s.file}" target="_blank">Document</a>` : ''}
+              <p>Rating: ${avgRating.toFixed(1)}/5</p>
+              <select id="rate-${s.id}">
+                <option value="0">Rate</option>
+                <option value="1">💔</option>
+                <option value="2">😞</option>
+                <option value="3">😎</option>
+                <option value="4">😁</option>
+                <option value="5">😍</option>
+              </select>
               <button onclick="event.stopPropagation(); rateService('${s.id}')">Submit Rating</button>
               <textarea id="msg-to-provider" placeholder="Message to provider..."></textarea>
               <button onclick="event.stopPropagation(); sendToProvider('${s.username}')">Send</button>
@@ -330,26 +465,26 @@
           }
         };
         circle.style.left = `${Math.random() * (window.innerWidth - size)}px`;
-        circle.style.top = `${100 + Math.random() * (window.innerHeight - size - 150)}px`;
-        velocities[i] = { vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2 };
+        circle.style.top = `${100 + Math.random() * cycleHeight}px`;
+        positions[i] = { y: parseFloat(circle.style.top), startY: parseFloat(circle.style.top) };
         container.appendChild(circle);
       });
-      animationStart = Date.now();
     }
 
     // Rate service
     function rateService(id) {
       const select = document.getElementById(`rate-${id}`);
-      const rating = select.value;
-      if (!rating || rating === 'Rate') return alert('Select a rating');
+      const rating = parseInt(select.value);
+      if (!rating || rating < 1 || rating > 5) return alert('Select a rating');
       fetch('/api/rate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, rating: parseInt(rating) })
+        body: JSON.stringify({ id, rating })
       })
         .then(res => {
           if (!res.ok) throw new Error(res.statusText);
-          select.value = 'Rate';
+          select.value = '0';
+          renderServices(); // Re-render to update size based on new rating
         })
         .catch(err => alert('Error rating: ' + err.message));
     }
@@ -377,40 +512,14 @@
     // Animation
     function animateCircles() {
       const circles = document.querySelectorAll('.service-circle:not(.expanded)');
-      if (Date.now() - animationStart > 60000) return;
       circles.forEach((c, i) => {
-        let x = parseFloat(c.style.left);
-        let y = parseFloat(c.style.top);
-        const size = parseFloat(c.style.width) / 2;
-        x += velocities[i].vx;
-        y += velocities[i].vy;
-        if (x <= 0 || x >= window.innerWidth - size*2) velocities[i].vx *= -1;
-        if (y <= 80 || y >= window.innerHeight - size*2 - 60) velocities[i].vy *= -1;
-        for (let j = 0; j < circles.length; j++) {
-          if (i === j) continue;
-          const c2 = circles[j];
-          const x2 = parseFloat(c2.style.left);
-          const y2 = parseFloat(c2.style.top);
-          const size2 = parseFloat(c2.style.width) / 2;
-          const dx = x + size - (x2 + size2);
-          const dy = y + size - (y2 + size2);
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          if (dist < size + size2) {
-            const tempVx = velocities[i].vx;
-            const tempVy = velocities[i].vy;
-            velocities[i].vx = velocities[j].vx;
-            velocities[i].vy = velocities[j].vy;
-            velocities[j].vx = tempVx;
-            velocities[j].vy = tempVy;
-            const overlap = (size + size2) - dist;
-            const angle = Math.atan2(dy, dx);
-            x += Math.cos(angle) * overlap / 2;
-            y += Math.sin(angle) * overlap / 2;
-            c2.style.left = `${x2 - Math.cos(angle) * overlap / 2}px`;
-            c2.style.top = `${y2 - Math.sin(angle) * overlap / 2}px`;
-          }
+        let y = positions[i].y;
+        y -= 0.05;
+        if (y < 80) {
+          y = 100 + cycleHeight;
+          positions[i].startY = y;
         }
-        c.style.left = `${x}px`;
+        positions[i].y = y;
         c.style.top = `${y}px`;
       });
       requestAnimationFrame(animateCircles);
@@ -420,7 +529,13 @@
     animateCircles();
 
     // Resize handler
-    window.addEventListener('resize', renderServices);
+    window.addEventListener('resize', () => {
+      positions = services.map((_, i) => ({
+        y: 100 + Math.random() * cycleHeight,
+        startY: 100 + Math.random() * cycleHeight
+      }));
+      renderServices();
+    });
   </script>
 </body>
 </html>
