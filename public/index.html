@@ -79,6 +79,7 @@
       cursor: pointer; 
       transition: all 0.2s; 
       color: black; 
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Cuter shadow */
     }
     .service-circle.expanded { 
       width: 90% !important; 
@@ -102,11 +103,24 @@
       object-fit: cover; 
       margin-top: 10px; 
       border-radius: 10px; /* Cuter rounded corners */
-      border: 2px solid #ffd700; /* Gold border */
-      box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Soft shadow */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Subtle shadow */
     }
-    .file-preview[controls] { 
-      background: black; /* Ensure video/audio preview looks clean */
+    .circle-preview { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      border-radius: 50%; 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      z-index: 0; 
+    }
+    .circle-content { 
+      position: relative; 
+      z-index: 1; 
+      background: rgba(0,0,0,0.5); 
+      padding: 5px; 
+      border-radius: 10px; 
     }
     .file-download { 
       margin-top: 10px; 
@@ -131,7 +145,7 @@
       font-size: 18px; 
     }
     .popup { 
-      display: none; 
+ Bắc:      display: none; 
       position: fixed; 
       top: 50%; 
       left: 50%; 
@@ -430,49 +444,31 @@
         .catch(err => alert('Error removing: ' + err.message));
     }
 
-    // Position circles without overlap
-    function positionCircles() {
-      const container = document.getElementById('service-container');
-      const width = container.offsetWidth;
-      const margin = 10; // Space between circles
-      const circles = services.map((s, i) => {
-        const avgRating = s.ratings.length ? (s.ratings.reduce((a,b)=>a+b,0)/s.ratings.length) : 0;
-        const size = width * 0.45 + (avgRating * 20);
-        return { index: i, size, placed: false };
-      });
-      const placed = [];
-      const maxTries = 100;
-      const gridStep = Math.sqrt(width * cycleHeight / circles.length) * 0.8;
+    // Prevent circle overlap
+    function preventOverlap(positions, index, size, maxAttempts = 50) {
+      const minDistance = 10; // Minimum gap between circles
+      let attempts = 0;
+      let x = Math.random() * (window.innerWidth - size);
+      let y = 100 + Math.random() * cycleHeight;
+      let valid = false;
 
-      circles.forEach(circle => {
-        let tries = 0;
-        let x, y;
-        while (tries < maxTries) {
-          x = Math.random() * (width - circle.size);
-          y = 100 + Math.random() * (cycleHeight - circle.size);
-          let valid = true;
-          for (const p of placed) {
-            const dx = x - p.x;
-            const dy = y - p.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < (circle.size + p.size) / 2 + margin) {
-              valid = false;
-              break;
-            }
+      while (!valid && attempts < maxAttempts) {
+        valid = true;
+        for (let i = 0; i < index; i++) {
+          const dx = x - positions[i].x;
+          const dy = y - positions[i].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const minAllowed = (size + positions[i].size) / 2 + minDistance;
+          if (distance < minAllowed) {
+            valid = false;
+            x = Math.random() * (window.innerWidth - size);
+            y = 100 + Math.random() * cycleHeight;
+            attempts++;
+            break;
           }
-          if (valid) break;
-          tries++;
         }
-        if (tries >= maxTries) {
-          // Fallback to grid-like placement
-          const row = Math.floor(placed.length / Math.floor(width / gridStep));
-          const col = placed.length % Math.floor(width / gridStep);
-          x = col * gridStep + margin;
-          y = 100 + row * gridStep + margin;
-        }
-        placed.push({ x, y, size: circle.size });
-        positions[circle.index] = { x, y: y, startY: y };
-      });
+      }
+      return { x, y, size };
     }
 
     // Render services
@@ -480,22 +476,38 @@
       const container = document.getElementById('service-container');
       container.innerHTML = '';
       const query = document.getElementById('search-input').value.toLowerCase();
+      positions = [];
       services.forEach((s, i) => {
         if (query && !s.title.toLowerCase().includes(query)) return;
         const avgRating = s.ratings.length ? (s.ratings.reduce((a,b)=>a+b,0)/s.ratings.length) : 0;
         const size = window.innerWidth * 0.45 + (avgRating * 20);
+        const pos = preventOverlap(positions, i, size);
+        positions[i] = { x: pos.x, y: pos.y, startY: pos.y, size };
         const circle = document.createElement('div');
         circle.className = 'service-circle';
         circle.style.width = `${size}px`;
         circle.style.height = `${size}px`;
         circle.style.backgroundColor = categoryColors[s.category] || 'gray';
-        if (s.file) circle.style.backgroundImage = `url(${s.file})`;
-        circle.style.backgroundSize = 'cover';
+        circle.style.left = `${pos.x}px`;
+        circle.style.top = `${pos.y}px`;
+        let preview = '';
+        if (s.file) {
+          if (s.file.match(/\.(jpe?g|png)$/i)) {
+            preview = `<img class="circle-preview" src="${s.file}" alt="Preview">`;
+          } else if (s.file.match(/\.(mp4|webm|ogg)$/i)) {
+            preview = `<video class="circle-preview" autoplay muted loop src="${s.file}" onloadedmetadata="if(this.duration>15)this.currentTime=15;"></video>`;
+          } else if (s.file.match(/\.(mp3|wav)$/i)) {
+            preview = `<audio class="circle-preview" autoplay loop src="${s.file}" onloadedmetadata="if(this.duration>15)this.currentTime=15;"></audio>`;
+          }
+        }
         const isOwner = s.username === currentUser;
         circle.innerHTML = `
-          <h3>${s.title}</h3>
-          <p>Rating: ${avgRating.toFixed(1)}/5</p>
-          ${isOwner ? `<span class="remove-btn" style="display:block;" onclick="event.stopPropagation(); removeService('${s.id}')">X</span>` : ''}
+          ${preview}
+          <div class="circle-content">
+            <h3>${s.title}</h3>
+            <p>Rating: ${avgRating.toFixed(1)}/5</p>
+            ${isOwner ? `<span class="remove-btn" style="display:block;" onclick="event.stopPropagation(); removeService('${s.id}')">X</span>` : ''}
+          </div>
         `;
         circle.onclick = (e) => {
           if (e.target.className === 'remove-btn' || e.target.className === 'close-btn-expanded' || e.target.id === 'msg-to-provider') return;
@@ -511,13 +523,14 @@
             <p>Price: ${s.price || 'N/A'}</p>
             ${s.file && s.file.match(/\.(jpe?g|png)$/i) ? `<img src="${s.file}" alt="File">` : ''}
             ${s.file && s.file.match(/\.(mp4|webm|ogg)$/i) ? `<video controls src="${s.file}"></video>` : ''}
+            ${s.file && s.file.match(/\.(mp3|wav)$/i) ? `<audio controls src="${s.file}"></audio>` : ''}
             ${s.file && s.file.match(/\.(pdf|doc|docx)$/i) ? `<a href="${s.file}" target="_blank">View Document</a>` : ''}
             ${s.file ? `
               <p>Preview:</p>
               ${s.file.match(/\.(jpe?g|png)$/i) ? `<img class="file-preview" src="${s.file}" alt="Preview">` : ''}
-              ${s.file.match(/\.(mp4|webm|ogg)$/i) ? `<video class="file-preview" src="${s.file}" controls autoplay muted loop></video>` : ''}
-              ${s.file.match(/\.(mp3|wav)$/i) ? `<audio class="file-preview" src="${s.file}" controls autoplay loop></audio>` : ''}
-              ${s.file && s.file.match(/\.(pdf|doc|docx)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Doc" alt="Document Preview">` : ''}
+              ${s.file.match(/\.(mp4|webm|ogg)$/i) ? `<video class="file-preview" src="${s.file}"></video>` : ''}
+              ${s.file.match(/\.(mp3|wav)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Audio" alt="Audio Preview">` : ''}
+              ${s.file.match(/\.(pdf|doc|docx)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Doc" alt="Document Preview">` : ''}
               <a class="file-download" href="${s.file}" download>Download File</a>
             ` : ''}
             <p>Rating: ${avgRating.toFixed(1)}/5</p>
@@ -535,8 +548,6 @@
             ${isOwner ? `<span class="remove-btn" style="display:block;" onclick="event.stopPropagation(); removeService('${s.id}')">X</span>` : ''}
           `;
         };
-        circle.style.left = `${positions[i]?.x || 0}px`;
-        circle.style.top = `${positions[i]?.y || 100}px`;
         container.appendChild(circle);
       });
     }
@@ -576,24 +587,23 @@
     }
 
     // Search
-    document.getElementById('search-btn').onclick = () => {
-      positionCircles();
-      renderServices();
-    };
-    document.getElementById('search-input').addEventListener('input', () => {
-      positionCircles();
-      renderServices();
-    });
+    document.getElementById('search-btn').onclick = renderServices;
+    document.getElementById('search-input').addEventListener('input', renderServices);
 
     // Animation
     function animateCircles() {
       const circles = document.querySelectorAll('.service-circle:not(.expanded)');
       circles.forEach((c, i) => {
         let y = positions[i].y;
-        y -= 0.05;
+        y -= 0.05; // Slower for smoother float-up
         if (y < -c.offsetHeight) {
           y = 100 + cycleHeight;
           positions[i].startY = y;
+          // Recalculate x to avoid overlap
+          const size = parseFloat(c.style.width);
+          const pos = preventOverlap(positions, i, size);
+          positions[i].x = pos.x;
+          c.style.left = `${pos.x}px`;
         }
         positions[i].y = y;
         c.style.top = `${y}px`;
@@ -601,16 +611,18 @@
       requestAnimationFrame(animateCircles);
     }
 
-    // Initial positioning and animation
-    positionCircles();
-    renderServices();
+    // Start animation
     animateCircles();
 
     // Resize handler
     window.addEventListener('resize', () => {
-      positionCircles();
+      positions = services.map((_, i) => {
+        const size = window.innerWidth * 0.45 + ((services[i].ratings.length ? services[i].ratings.reduce((a,b)=>a+b,0)/services[i].ratings.length : 0) * 20);
+        const pos = preventOverlap(positions, i, size);
+        return { x: pos.x, y: pos.y, startY: pos.y, size };
+      });
       renderServices();
     });
   </script>
 </body>
-</html>
+</html> 
