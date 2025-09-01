@@ -81,9 +81,9 @@
       color: black; 
     }
     .service-circle.expanded { 
-      width: 90% !important; /* Slightly smaller */
+      width: 90% !important; 
       height: auto !important; 
-      left: 1% !important; /* Slightly left */
+      left: 1% !important; 
       top: 20% !important; 
       z-index: 20; 
       background: white !important; 
@@ -101,7 +101,13 @@
       height: 50px; 
       object-fit: cover; 
       margin-top: 10px; 
-    } /* Logo-sized preview */
+      border-radius: 10px; /* Cuter rounded corners */
+      border: 2px solid #ffd700; /* Gold border */
+      box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Soft shadow */
+    }
+    .file-preview[controls] { 
+      background: black; /* Ensure video/audio preview looks clean */
+    }
     .file-download { 
       margin-top: 10px; 
       color: blue; 
@@ -207,7 +213,7 @@
       <option value="Agriculture">Agriculture</option>
     </select>
     <input type="text" id="post-price" placeholder="Price (e.g., 100 or 100 USD)">
-    <input type="file" id="post-file" accept="image/*,video/*,.pdf,.doc,.docx">
+    <input type="file" id="post-file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx">
     <button onclick="postService()">Post</button>
   </div>
 
@@ -424,6 +430,51 @@
         .catch(err => alert('Error removing: ' + err.message));
     }
 
+    // Position circles without overlap
+    function positionCircles() {
+      const container = document.getElementById('service-container');
+      const width = container.offsetWidth;
+      const margin = 10; // Space between circles
+      const circles = services.map((s, i) => {
+        const avgRating = s.ratings.length ? (s.ratings.reduce((a,b)=>a+b,0)/s.ratings.length) : 0;
+        const size = width * 0.45 + (avgRating * 20);
+        return { index: i, size, placed: false };
+      });
+      const placed = [];
+      const maxTries = 100;
+      const gridStep = Math.sqrt(width * cycleHeight / circles.length) * 0.8;
+
+      circles.forEach(circle => {
+        let tries = 0;
+        let x, y;
+        while (tries < maxTries) {
+          x = Math.random() * (width - circle.size);
+          y = 100 + Math.random() * (cycleHeight - circle.size);
+          let valid = true;
+          for (const p of placed) {
+            const dx = x - p.x;
+            const dy = y - p.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < (circle.size + p.size) / 2 + margin) {
+              valid = false;
+              break;
+            }
+          }
+          if (valid) break;
+          tries++;
+        }
+        if (tries >= maxTries) {
+          // Fallback to grid-like placement
+          const row = Math.floor(placed.length / Math.floor(width / gridStep));
+          const col = placed.length % Math.floor(width / gridStep);
+          x = col * gridStep + margin;
+          y = 100 + row * gridStep + margin;
+        }
+        placed.push({ x, y, size: circle.size });
+        positions[circle.index] = { x, y: y, startY: y };
+      });
+    }
+
     // Render services
     function renderServices() {
       const container = document.getElementById('service-container');
@@ -464,8 +515,9 @@
             ${s.file ? `
               <p>Preview:</p>
               ${s.file.match(/\.(jpe?g|png)$/i) ? `<img class="file-preview" src="${s.file}" alt="Preview">` : ''}
-              ${s.file.match(/\.(mp4|webm|ogg)$/i) ? `<video class="file-preview" src="${s.file}"></video>` : ''}
-              ${s.file.match(/\.(pdf|doc|docx)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Doc" alt="Document Preview">` : ''}
+              ${s.file.match(/\.(mp4|webm|ogg)$/i) ? `<video class="file-preview" src="${s.file}" controls autoplay muted loop></video>` : ''}
+              ${s.file.match(/\.(mp3|wav)$/i) ? `<audio class="file-preview" src="${s.file}" controls autoplay loop></audio>` : ''}
+              ${s.file && s.file.match(/\.(pdf|doc|docx)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Doc" alt="Document Preview">` : ''}
               <a class="file-download" href="${s.file}" download>Download File</a>
             ` : ''}
             <p>Rating: ${avgRating.toFixed(1)}/5</p>
@@ -483,9 +535,8 @@
             ${isOwner ? `<span class="remove-btn" style="display:block;" onclick="event.stopPropagation(); removeService('${s.id}')">X</span>` : ''}
           `;
         };
-        circle.style.left = `${Math.random() * (window.innerWidth - size)}px`;
-        circle.style.top = `${100 + Math.random() * cycleHeight}px`;
-        positions[i] = { y: parseFloat(circle.style.top), startY: parseFloat(circle.style.top) };
+        circle.style.left = `${positions[i]?.x || 0}px`;
+        circle.style.top = `${positions[i]?.y || 100}px`;
         container.appendChild(circle);
       });
     }
@@ -525,8 +576,14 @@
     }
 
     // Search
-    document.getElementById('search-btn').onclick = renderServices;
-    document.getElementById('search-input').addEventListener('input', renderServices);
+    document.getElementById('search-btn').onclick = () => {
+      positionCircles();
+      renderServices();
+    };
+    document.getElementById('search-input').addEventListener('input', () => {
+      positionCircles();
+      renderServices();
+    });
 
     // Animation
     function animateCircles() {
@@ -544,17 +601,16 @@
       requestAnimationFrame(animateCircles);
     }
 
-    // Start animation
+    // Initial positioning and animation
+    positionCircles();
+    renderServices();
     animateCircles();
 
     // Resize handler
     window.addEventListener('resize', () => {
-      positions = services.map((_, i) => ({
-        y: 100 + Math.random() * cycleHeight,
-        startY: 100 + Math.random() * cycleHeight
-      }));
+      positionCircles();
       renderServices();
     });
   </script>
 </body>
-</html> 
+</html>
