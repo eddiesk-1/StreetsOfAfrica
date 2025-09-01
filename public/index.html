@@ -61,14 +61,16 @@
     }
     #search-btn { display: none; }
     #service-container { 
-      position: relative; 
-      min-height: 100vh; 
-      overflow-y: auto; 
       padding-top: 60px; 
       padding-bottom: 60px; 
+      display: flex; 
+      flex-wrap: wrap; 
+      justify-content: center; 
+      gap: 15px; /* Space between circles */
+      overflow-y: auto; 
+      min-height: 100vh; 
     }
     .service-circle { 
-      position: absolute; 
       border-radius: 50%; 
       display: flex; 
       flex-direction: column; 
@@ -79,7 +81,10 @@
       cursor: pointer; 
       transition: all 0.2s; 
       color: black; 
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Cuter shadow */
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3); 
+      width: 120px; /* Fixed size for uniformity */
+      height: 120px; 
+      position: relative; /* For absolute positioning of preview */
     }
     .service-circle.expanded { 
       width: 90% !important; 
@@ -102,8 +107,8 @@
       height: 50px; 
       object-fit: cover; 
       margin-top: 10px; 
-      border-radius: 10px; /* Cuter rounded corners */
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Subtle shadow */
+      border-radius: 10px; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
     }
     .circle-preview { 
       width: 100%; 
@@ -145,7 +150,7 @@
       font-size: 18px; 
     }
     .popup { 
- Bắc:      display: none; 
+      display: none; 
       position: fixed; 
       top: 50%; 
       left: 50%; 
@@ -264,8 +269,6 @@
     socket.emit('registerUser', currentUser);
 
     let services = [];
-    let positions = [];
-    const cycleHeight = window.innerHeight - 150;
 
     const categoryColors = {
       Food: 'green', Crafts: 'blue', Services: 'orange', Fashion: 'purple',
@@ -276,7 +279,6 @@
     fetch('/api/services').then(res => res.json()).then(data => {
       services = data;
       renderServices();
-      animateCircles();
     });
 
     // Real-time updates
@@ -444,52 +446,20 @@
         .catch(err => alert('Error removing: ' + err.message));
     }
 
-    // Prevent circle overlap
-    function preventOverlap(positions, index, size, maxAttempts = 50) {
-      const minDistance = 10; // Minimum gap between circles
-      let attempts = 0;
-      let x = Math.random() * (window.innerWidth - size);
-      let y = 100 + Math.random() * cycleHeight;
-      let valid = false;
-
-      while (!valid && attempts < maxAttempts) {
-        valid = true;
-        for (let i = 0; i < index; i++) {
-          const dx = x - positions[i].x;
-          const dy = y - positions[i].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const minAllowed = (size + positions[i].size) / 2 + minDistance;
-          if (distance < minAllowed) {
-            valid = false;
-            x = Math.random() * (window.innerWidth - size);
-            y = 100 + Math.random() * cycleHeight;
-            attempts++;
-            break;
-          }
-        }
-      }
-      return { x, y, size };
-    }
-
     // Render services
     function renderServices() {
       const container = document.getElementById('service-container');
       container.innerHTML = '';
       const query = document.getElementById('search-input').value.toLowerCase();
-      positions = [];
-      services.forEach((s, i) => {
+      services.forEach(s => {
         if (query && !s.title.toLowerCase().includes(query)) return;
         const avgRating = s.ratings.length ? (s.ratings.reduce((a,b)=>a+b,0)/s.ratings.length) : 0;
-        const size = window.innerWidth * 0.45 + (avgRating * 20);
-        const pos = preventOverlap(positions, i, size);
-        positions[i] = { x: pos.x, y: pos.y, startY: pos.y, size };
+        const size = 120 + (avgRating * 10); // Smaller rating impact for grid
         const circle = document.createElement('div');
         circle.className = 'service-circle';
         circle.style.width = `${size}px`;
         circle.style.height = `${size}px`;
         circle.style.backgroundColor = categoryColors[s.category] || 'gray';
-        circle.style.left = `${pos.x}px`;
-        circle.style.top = `${pos.y}px`;
         let preview = '';
         if (s.file) {
           if (s.file.match(/\.(jpe?g|png)$/i)) {
@@ -530,7 +500,7 @@
               ${s.file.match(/\.(jpe?g|png)$/i) ? `<img class="file-preview" src="${s.file}" alt="Preview">` : ''}
               ${s.file.match(/\.(mp4|webm|ogg)$/i) ? `<video class="file-preview" src="${s.file}"></video>` : ''}
               ${s.file.match(/\.(mp3|wav)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Audio" alt="Audio Preview">` : ''}
-              ${s.file.match(/\.(pdf|doc|docx)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Doc" alt="Document Preview">` : ''}
+              ${s.file && s.file.match(/\.(pdf|doc|docx)$/i) ? `<img class="file-preview" src="https://via.placeholder.com/50?text=Doc" alt="Document Preview">` : ''}
               <a class="file-download" href="${s.file}" download>Download File</a>
             ` : ''}
             <p>Rating: ${avgRating.toFixed(1)}/5</p>
@@ -589,40 +559,6 @@
     // Search
     document.getElementById('search-btn').onclick = renderServices;
     document.getElementById('search-input').addEventListener('input', renderServices);
-
-    // Animation
-    function animateCircles() {
-      const circles = document.querySelectorAll('.service-circle:not(.expanded)');
-      circles.forEach((c, i) => {
-        let y = positions[i].y;
-        y -= 0.05; // Slower for smoother float-up
-        if (y < -c.offsetHeight) {
-          y = 100 + cycleHeight;
-          positions[i].startY = y;
-          // Recalculate x to avoid overlap
-          const size = parseFloat(c.style.width);
-          const pos = preventOverlap(positions, i, size);
-          positions[i].x = pos.x;
-          c.style.left = `${pos.x}px`;
-        }
-        positions[i].y = y;
-        c.style.top = `${y}px`;
-      });
-      requestAnimationFrame(animateCircles);
-    }
-
-    // Start animation
-    animateCircles();
-
-    // Resize handler
-    window.addEventListener('resize', () => {
-      positions = services.map((_, i) => {
-        const size = window.innerWidth * 0.45 + ((services[i].ratings.length ? services[i].ratings.reduce((a,b)=>a+b,0)/services[i].ratings.length : 0) * 20);
-        const pos = preventOverlap(positions, i, size);
-        return { x: pos.x, y: pos.y, startY: pos.y, size };
-      });
-      renderServices();
-    });
   </script>
 </body>
 </html> 
