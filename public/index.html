@@ -4,7 +4,6 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Streets of Africa</title>
-  <link rel="manifest" href="/manifest.json"/>
   <link rel="stylesheet" href="/styles.css"/>
 </head>
 <body>
@@ -24,28 +23,22 @@
   </div>
 
   <main id="gridArea"></main>
-  <div id="sentinel"></div>
+  <div id="sentinel" style="height:1px"></div>
 
-  <!-- upload form modal (hidden by default) -->
+  <!-- upload modal -->
   <div id="postModal" class="modal hidden">
     <form id="uploadForm" enctype="multipart/form-data">
       <h3>Post a service</h3>
-      <input name="username" placeholder="username (e.g. eddie_1@0123456789)" required />
+      <input name="username" placeholder="username (eddie_1@0123456789)" required />
       <input name="title" placeholder="title" required />
       <textarea name="desc" placeholder="description"></textarea>
       <input name="price" placeholder="price" />
       <input name="file" type="file" required />
-      <button type="submit">Upload</button>
-      <button type="button" id="closePost">Close</button>
+      <div style="margin-top:8px">
+        <button type="submit">Upload</button>
+        <button type="button" id="closePost">Close</button>
+      </div>
     </form>
-  </div>
-
-  <!-- expanded view -->
-  <div id="expanded" class="modal hidden">
-    <div class="expandedBox" role="dialog">
-      <div class="media-container" id="expMedia"></div>
-      <div class="content-container" id="expContent"></div>
-    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
