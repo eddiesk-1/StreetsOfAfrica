@@ -1,14 +1,14 @@
 {
-  "name": "streets-of-africa",
+  "name": "streetsofafrica",
   "version": "1.0.0",
-  "description": "Streets of Africa app",
+  "description": "Streets of Africa - services marketplace",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "express-fileupload": "^1.2.1",
-    "socket.io": "^4.7.2"
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
+    "socket.io": "^4.8.0"
   }
-} 
+}
