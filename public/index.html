@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streets of Africa</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+  <div id="background"></div>
+  <header>
+    <img id="logo" src="/logo.jpg" alt="Logo" onerror="this.src='https://via.placeholder.com/50?text=Logo';">
+    <span class="title">Streets of Africa</span>
+    <div class="icons">
+      <i class="fas fa-plus" id="post-icon"></i>
+      <i class="fas fa-user" id="profile-icon"></i>
+      <i class="fas fa-envelope" id="msg-icon"><span id="msg-notification" class="notification">0</span></i>
+      <i class="fas fa-cog" id="settings-toggle" title="Toggle Background"></i>
+    </div>
+  </header>
+  <div id="service-container">
+    <div id="sentinel"></div>
+  </div>
+  <div id="search-bar">
+    <input type="text" id="search-input" placeholder="what you dey find 😂">
+  </div>
+  <div class="popup" id="post-form">
+    <span class="close-btn" onclick="closePopup('post-form')">X</span>
+    <input type="text" id="post-username" placeholder="Username (user@0123456789)" value="user@0123456789">
+    <input type="text" id="post-title" placeholder="Title (required)">
+    <textarea id="post-desc" placeholder="Add at least your location 🙂"></textarea>
+    <select id="post-category">
+      <option value="">Select Category (required)</option>
+      <option value="Food">Food</option>
+      <option value="Crafts">Crafts</option>
+      <option value="Services">Services</option>
+      <option value="Fashion">Fashion</option>
+      <option value="Technology">Technology</option>
+      <option value="Education">Education</option>
+      <option value="Health">Health</option>
+      <option value="Agriculture">Agriculture</option>
+    </select>
+    <input type="text" id="post-price" placeholder="Price (e.g., 100 or 100 USD)">
+    <input type="file" id="post-file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx">
+    <button onclick="postService()">Post</button>
+  </div>
+  <div class="popup" id="msg-form">
+    <span class="close-btn" onclick="closePopup('msg-form')">X</span>
+    <input type="text" id="msg-to" placeholder="To (username@1234567890)" oninput="loadMessages()">
+    <div id="msg-status"></div>
+    <div id="message-list"></div>
+    <textarea id="msg-content" placeholder="Message..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+  </div>
+  <div class="popup" id="profile-form">
+    <span class="close-btn" onclick="closePopup('profile-form')">X</span>
+    <input type="text" id="profile-username" placeholder="Update Username">
+    <button onclick="saveProfile()">Save</button>
+    <div id="posted-services"></div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+  <script src="/script.js"></script>
+</body>
+</html> 
