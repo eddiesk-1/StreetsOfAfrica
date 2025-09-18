@@ -1,13 +1,33 @@
-body { font-family: sans-serif; margin: 0; }
-header { display: flex; align-items: center; padding: 10px; background: #eee; }
-header h1 { flex: 1; margin-left: 10px; }
-.icons button { margin-left: 10px; }
-#msgBadge { background: red; color: white; border-radius: 50%; padding: 2px 5px; font-size: 12px; }
-#grid { display: grid; gap: 10px; padding: 10px; }
-#grid .row:nth-child(odd) { grid-template-columns: repeat(2, 1fr); }
-#grid .row:nth-child(even) { grid-template-columns: repeat(3, 1fr); }
-@media (max-width: 600px) { #grid { display: flex; flex-wrap: wrap; } }
-#expanded { position: fixed; top: 50%; left: 50%; width: 90%; max-width: 400px; aspect-ratio: 4/3; background: white; border: 1px solid #ccc; transform: translate(-50%, -50%); display: flex; }
-.hidden { display: none; }
-.media-container, .content-container { flex: 1; padding: 5px; }
-details img { width: 50px; height: 50px; }
+/* styles.css - compact responsive styles */
+:root{--bg:#f6f6f6;--card:#fff;--accent:#222}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:#111}
+.top{display:flex;align-items:center;padding:10px;background:var(--accent);color:#fff}
+.top h1{margin-left:10px;flex:1;font-size:18px}
+.icons button{margin-left:8px}
+.searchWrap{padding:10px}
+#search{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd}
+#gridArea{padding:10px;display:grid;gap:10px}
+
+/* grid: alternate rows pattern achieved by grouping in script.
+   mobile fallback */
+@media (min-width:600px){
+  /* grid columns will be set by script by applying classes to container */
+}
+@media (max-width:599px){
+  #gridArea{display:flex;flex-wrap:wrap}
+  .svcCard{flex:1 1 45%;margin:5px}
+}
+
+/* service card */
+.svcCard{background:var(--card);padding:10px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;text-align:center}
+.svcCard img{max-width:100%;height:auto;border-radius:8px}
+.badge{background:red;color:#fff;border-radius:999px;padding:2px 6px;font-size:12px}
+
+/* modal base */
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)}
+.modal.hidden{display:none}
+.expandedBox{width:90%;max-width:400px;background:#fff;border-radius:10px;display:flex;aspect-ratio:4/3;overflow:hidden}
+.media-container,.content-container{width:50%;padding:8px;overflow:auto}
+.media-container img, .media-container video{width:100%;height:auto}
+details > summary{cursor:pointer}
+details img.preview{width:50px;height:50px;object-fit:cover}

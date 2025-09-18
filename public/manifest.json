@@ -1,15 +1,12 @@
 {
   "name": "Streets of Africa",
   "short_name": "SoA",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "theme_color": "#222222",
   "icons": [
-    {
-      "src": "/logo.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg"
-    }
+    { "src": "/logo.jpg", "sizes": "512x512", "type": "image/png" }
   ]
-} 
+}
+/

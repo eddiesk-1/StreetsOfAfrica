@@ -1,35 +1,54 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Streets of Africa</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="stylesheet" href="/styles.css"/>
 </head>
 <body>
-  <header>
-    <img src="logo.jpg" alt="logo" width="50" height="50">
+  <header class="top">
+    <img src="/logo.jpg" alt="logo" width="50" height="50"/>
     <h1>Streets of Africa</h1>
     <div class="icons">
-      <button id="postBtn">➕</button>
-      <button id="profileBtn">👤</button>
-      <button id="msgBtn">💬 <span id="msgBadge">0</span></button>
-      <button id="settingsBtn">⚙️</button>
+      <button id="postBtn" title="Post">➕</button>
+      <button id="profileBtn" title="Profile">👤</button>
+      <button id="msgBtn" title="Messages">💬 <span id="msgBadge" class="badge">0</span></button>
+      <button id="settingsBtn" title="Settings">⚙️</button>
     </div>
   </header>
 
-  <input id="search" placeholder="what you dey find 😂">
+  <div class="searchWrap">
+    <input id="search" placeholder="what you dey find 😂" />
+  </div>
 
-  <main id="grid"></main>
+  <main id="gridArea"></main>
   <div id="sentinel"></div>
 
-  <div id="expanded" class="hidden">
-    <div class="media-container"></div>
-    <div class="content-container"></div>
+  <!-- upload form modal (hidden by default) -->
+  <div id="postModal" class="modal hidden">
+    <form id="uploadForm" enctype="multipart/form-data">
+      <h3>Post a service</h3>
+      <input name="username" placeholder="username (e.g. eddie_1@0123456789)" required />
+      <input name="title" placeholder="title" required />
+      <textarea name="desc" placeholder="description"></textarea>
+      <input name="price" placeholder="price" />
+      <input name="file" type="file" required />
+      <button type="submit">Upload</button>
+      <button type="button" id="closePost">Close</button>
+    </form>
+  </div>
+
+  <!-- expanded view -->
+  <div id="expanded" class="modal hidden">
+    <div class="expandedBox" role="dialog">
+      <div class="media-container" id="expMedia"></div>
+      <div class="content-container" id="expContent"></div>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
+  <script src="/script.js"></script>
 </body>
 </html>

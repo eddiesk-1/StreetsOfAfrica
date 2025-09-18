@@ -1,16 +1,10 @@
-const CACHE_NAME = 'streets-of-africa-v1';
-const urlsToCache = ['/', '/index.html', '/styles.css', '/script.js', '/logo.jpg'];
+const CACHE = 'soa-cache-v1';
+const FILES = ['/', '/index.html', '/styles.css', '/script.js', '/logo.jpg', '/manifest.json'];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
-}); 
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});
